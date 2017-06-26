@@ -25,7 +25,6 @@ setup(
       ],
       classifiers=[
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Development Status :: 4 - Beta',
         'Natural Language :: English',
