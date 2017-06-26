@@ -76,10 +76,13 @@ if __name__ == "__main__":
 ```
 
 ## Installation
+Install from PyPI:
 
-- pip install gdax-python-api
-- git clone
-- download, setup.py
+    pip install gdax-python-api
+
+You can [download the latest version from Github](https://github.com/csko/gdax-python-api/archive/master.zip) and install it manually:
+
+    python setup.py install
 
 ## Requirements
 
@@ -90,4 +93,4 @@ if __name__ == "__main__":
 * websockets
 
 ## Acknowledgements
-Parts of this software are based on [GDAX-Python](https://github.com/danpaquin/GDAX-Python) by Daniel Paquin.
+Parts of this software are based on [GDAX-Python](https://github.com/danpaquin/GDAX-Python) by Daniel Paquin. See also https://github.com/danpaquin/GDAX-Python/blob/master/contributors.txt.
