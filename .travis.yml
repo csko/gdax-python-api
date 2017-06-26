@@ -18,10 +18,10 @@ install:
   - pip install virtualenv --upgrade
   - pip install -r requirements.txt
   - pip install -r requirements-dev.txt
-  - pip install .
+  - pip install -e .
 
 script:
-  - coverage run -m pytest --cov=gdax
+  - py.test --cov=gdax --cov-report=term --cov-append tests
   
 after_success:
   - codecov
