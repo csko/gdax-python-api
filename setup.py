@@ -30,8 +30,8 @@ setup(
         'Development Status :: 4 - Beta',
         'Natural Language :: English',
         'Intended Audience :: Developers',
-        'Intended Audience :: Financial and Insurance Industry'
-        'License :: MIT License',
+        'Intended Audience :: Financial and Insurance Industry',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Topic :: Software Development :: Libraries :: Python Modules',
       ],
