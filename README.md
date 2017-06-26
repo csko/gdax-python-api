@@ -1,6 +1,6 @@
 # GDAX Python API
 
-GDAX API client written in Python3 using async/await
+Unofficial GDAX API client written in Python3 using async/await
 
 ## API
 The implementation supports the following GDAX endpoints:
