@@ -1,6 +1,8 @@
 # GDAX Python API
 
 [![Build Status](https://travis-ci.org/csko/gdax-python-api.svg?branch=master)](https://travis-ci.org/csko/gdax-python-api)
+[![PyPI](https://img.shields.io/pypi/pyversions/gdax-python-api.svg)]()
+[![PyPI](https://img.shields.io/pypi/v/gdax-python-api.svg)]()
 
 Unofficial GDAX API client written in Python3 using async/await
 
