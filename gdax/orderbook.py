@@ -93,7 +93,11 @@ class OrderBook(object):
         return self
 
     async def __aexit__(self, exc_type, exc, traceback):
-        return await self._ws_session.__aexit__(exc_type, exc, traceback)
+        tasks = [self._ws_session.__aexit__(exc_type, exc, traceback)]
+        if self.trade_log_file_path is not None:
+            tasks.append(self._close_log_file())
+        res = await asyncio.gather(*tasks)
+        return tasks[0]
 
     async def _open_log_file(self):
         if self.trade_log_file_path is not None:

@@ -10,13 +10,7 @@ from asynctest import MagicMock, patch, CoroutineMock, call
 import gdax
 import gdax.orderbook
 
-
-class AsyncContextManagerMock(MagicMock):
-    async def __aenter__(self):
-        return self.aenter
-
-    async def __aexit__(self, *args):
-        pass
+from tests.helpers import AsyncContextManagerMock
 
 
 def generate_id():
@@ -231,3 +225,65 @@ class TestOrderbook(object):
                 }
             assert orderbook._authenticated
             mock_connect.return_value.aenter.send_json.assert_called_with(msg)
+
+    @patch('gdax.trader.Trader.get_product_order_book')
+    async def test_basic_message(self, mock_book, mock_connect):
+        mock_connect.return_value.aenter.receive_str = CoroutineMock()
+        mock_connect.return_value.aenter.send_json = CoroutineMock()
+        mock_book.return_value = {'bids': [], 'asks': [], 'sequence': 1}
+        message_expected = {
+              "type": "done",
+              "side": "sell",
+              "order_id": "4eef1226-4b38-422c-a5b1-56def7107f9a",
+              "reason": "canceled",
+              "product_id": "BTC-USD",
+              "price": "2601.76000000",
+              "remaining_size": "3.09000000",
+              "sequence": 2,
+              "time": "2017-06-25T11:23:14.775000Z"
+            }
+        mock_connect.return_value.aenter.receive_str.side_effect = [
+            json.dumps(message_expected)
+        ]
+        async with gdax.orderbook.OrderBook('BTC-USD') as orderbook:
+            assert orderbook.product_ids == ['BTC-USD']
+            message = await orderbook.handle_message()
+            assert message == message_expected
+
+    @patch('gdax.trader.Trader.get_product_order_book')
+    async def test_logfile(self, mock_book, mock_connect):
+        mock_connect.return_value.aenter.receive_str = CoroutineMock()
+        mock_connect.return_value.aenter.send_json = CoroutineMock()
+        message_expected = {
+              "type": "done",
+              "side": "sell",
+              "order_id": "4eef1226-4b38-422c-a5b1-56def7107f9a",
+              "reason": "canceled",
+              "product_id": "ETH-USD",
+              "price": "2601.76000000",
+              "remaining_size": "3.09000000",
+              "sequence": 2,
+              "time": "2017-06-25T11:23:14.775000Z"
+            }
+        mock_connect.return_value.aenter.receive_str.side_effect = [
+            json.dumps(message_expected)
+        ]
+
+        product_id = 'ETH-USD'
+        book = {'bids': [], 'asks': [], 'sequence': 1}
+        mock_book.return_value = book
+        calls = [call(f'B {product_id} {json.dumps(book)}\n')]
+        with patch('aiofiles.open',
+                   new_callable=AsyncContextManagerMock) as mock_open:
+            mock_open.return_value.aenter.write = CoroutineMock()
+            # mock_open.return_value.aexit = AsyncContextManagerMock()
+            mock_write = mock_open.return_value.aenter.write
+            async with gdax.orderbook.OrderBook(
+                    [product_id],
+                    trade_log_file_path='trades.txt') as orderbook:
+
+                mock_write.assert_has_calls(calls)
+
+                message = await orderbook.handle_message()
+                calls.append(call(f'W {json.dumps(message_expected)}\n'))
+                mock_write.assert_has_calls(calls)
