@@ -13,7 +13,8 @@ import time
 
 from bintrees import FastRBTree
 import aiofiles
-import websockets
+import aiohttp
+# import websockets
 
 import gdax.trader
 import gdax.utils
@@ -43,11 +44,14 @@ class OrderBook(object):
         self._asks = {product_id: FastRBTree() for product_id in product_ids}
         self._bids = {product_id: FastRBTree() for product_id in product_ids}
         self._sequences = {product_id: None for product_id in product_ids}
-        self._ws = None
+        self._ws_session = None
         self._ws_connect = None
+        self._ws = None
 
     async def _init(self):
-        self._ws_connect = websockets.connect('wss://ws-feed.gdax.com')
+        self._ws_session = aiohttp.ClientSession()
+        self._ws_connect = self._ws_session.ws_connect(
+            'wss://ws-feed.gdax.com')
         self._ws = await self._ws_connect.__aenter__()
 
         # subscribe
@@ -89,7 +93,7 @@ class OrderBook(object):
         return self
 
     async def __aexit__(self, exc_type, exc, traceback):
-        return await self._ws_connect.__aexit__(exc_type, exc, traceback)
+        return await self._ws_session.__aexit__(exc_type, exc, traceback)
 
     async def _open_log_file(self):
         if self.trade_log_file_path is not None:
@@ -101,10 +105,10 @@ class OrderBook(object):
             await self._trade_file.__aexit__(None, None, None)
 
     async def _send(self, **kwargs):
-        await self._ws.send(json.dumps(kwargs))
+        await self._ws.send_json(kwargs)
 
     async def _recv(self):
-        json_data = await self._ws.recv()
+        json_data = await self._ws.receive_str()
         if self._trade_file:
             await self._trade_file.write(f'W {json_data}\n')
         return json.loads(json_data)
@@ -132,9 +136,11 @@ class OrderBook(object):
     async def handle_message(self):
         try:
             message = await self._recv()
-        except websockets.exceptions.ConnectionClosed:
-            await self._ws_connect.__aexit__(None, None, None)
-            self._init()
+        except aiohttp.ServerDisconnectedError as exc:
+            logging.error(
+                f'Error: Exception: f{exc}. Re-initializing websocket.')
+            await self._ws_session.__aexit__(None, None, None)
+            await self._init()
             return
 
         product_id = message['product_id']
@@ -146,10 +152,10 @@ class OrderBook(object):
             # from getProductOrderBook)
             return message
         elif sequence > self._sequences[product_id] + 1:
-            logging.info(
+            logging.error(
                 'Error: messages missing ({} - {}). Re-initializing websocket.'
                 .format(sequence, self._sequences[product_id]))
-            await self._ws_connect.__aexit__(None, None, None)
+            await self._ws_session.__aexit__(None, None, None)
             await self._init()
             return
 
@@ -243,7 +249,6 @@ class OrderBook(object):
                 self.set_asks(product_id, price, asks)
 
     def change(self, product_id, order):
-        logging.info((product_id, order))
         if 'new_size' not in order:
             # market order
             # TODO

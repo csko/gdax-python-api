@@ -22,7 +22,7 @@ install:
 
 script:
   - py.test --cov=gdax --cov-report=term --cov-append tests
-  
+
 after_success:
   - codecov
 

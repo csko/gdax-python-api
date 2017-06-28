@@ -1,7 +1,6 @@
 # TODO
 
 - improve test coverage, especially for the order book
-- use aiohttp.websockets instead of websockets
 - client-side rate limiting
 - convert return API values from string to Decimal
 - better enforce API rules

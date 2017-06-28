@@ -12,9 +12,9 @@ setup(
       author_email='cskornel@gmail.com',
       install_requires=[
         'aiohttp==2.2.0',
+        'aiofiles==0.3.1',
         'async-timeout==1.2.1',
         'requests==2.18.1',
-        'websockets==3.3',
         'bintrees==2.0.7',
       ],
       packages=find_packages(),

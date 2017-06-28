@@ -138,20 +138,19 @@ asks1_internal = {
 
 
 @pytest.mark.asyncio
-@patch('websockets.connect', new_callable=AsyncContextManagerMock)
+@patch('aiohttp.ClientSession.ws_connect',
+       new_callable=AsyncContextManagerMock)
 class TestOrderbook(object):
     @patch('gdax.trader.Trader.get_product_order_book')
     async def test_basic_init(self, mock_book, mock_connect):
-        mock_connect.return_value.aenter.send = CoroutineMock()
+        mock_connect.return_value.aenter.send_json = CoroutineMock()
         mock_book.return_value = test_book
 
         product_id = 'ETH-USD'
         product_ids = [product_id]
         async with gdax.orderbook.OrderBook(product_ids) as orderbook:
             msg = {'type': 'subscribe', 'product_ids': product_ids}
-            subscribe_msg = json.dumps(msg)
-            mock_connect.return_value.aenter.send.assert_called_with(
-                subscribe_msg)
+            mock_connect.return_value.aenter.send_json.assert_called_with(msg)
 
             mock_book.assert_called_with(level=3)
 
@@ -195,15 +194,13 @@ class TestOrderbook(object):
 
     @patch('gdax.trader.Trader.get_product_order_book')
     async def test_heartbeat(self, mock_book, mock_connect):
-        mock_connect.return_value.aenter.send = CoroutineMock()
+        mock_connect.return_value.aenter.send_json = CoroutineMock()
 
         mock_book.return_value = {'bids': [], 'asks': [], 'sequence': 1}
         product_ids = ['ETH-USD']
         async with gdax.orderbook.OrderBook(product_ids,
                                             use_heartbeat=True) as orderbook:
-            msg1 = {'type': 'subscribe', 'product_ids': product_ids}
-            msg2 = {'type': 'heartbeat', 'on': True}
-            subscribe_msg = json.dumps(msg1)
-            heartbeat_msg = json.dumps(msg2)
+            subscribe_msg = {'type': 'subscribe', 'product_ids': product_ids}
+            heartbeat_msg = {'type': 'heartbeat', 'on': True}
             calls = [call(subscribe_msg), call(heartbeat_msg)]
-            mock_connect.return_value.aenter.send.assert_has_calls(calls)
+            mock_connect.return_value.aenter.send_json.assert_has_calls(calls)
