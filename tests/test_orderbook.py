@@ -1,11 +1,14 @@
+import json
+import uuid
+import base64
+from decimal import Decimal
+
+import asyncio
 import pytest
+from asynctest import MagicMock, patch, CoroutineMock, call
+
 import gdax
 import gdax.orderbook
-import json
-import asyncio
-from asynctest import MagicMock, patch, CoroutineMock, call
-import uuid
-from decimal import Decimal
 
 
 class AsyncContextManagerMock(MagicMock):
@@ -204,3 +207,27 @@ class TestOrderbook(object):
             heartbeat_msg = {'type': 'heartbeat', 'on': True}
             calls = [call(subscribe_msg), call(heartbeat_msg)]
             mock_connect.return_value.aenter.send_json.assert_has_calls(calls)
+
+    @patch('gdax.trader.Trader.get_product_order_book')
+    async def test_authentication(self, mock_book, mock_connect, mocker):
+        mock_connect.return_value.aenter.send_json = CoroutineMock()
+        mock_book.return_value = {'bids': [], 'asks': [], 'sequence': 1}
+        timestamp = '1493343391.076892'
+        mocker.patch('time.time', return_value=timestamp)
+        product_ids = ['ETH-USD']
+        async with gdax.orderbook.OrderBook(
+            product_ids,
+            api_key='a',
+            api_secret=base64.b64encode(b'a' * 64),
+            passphrase='b',
+        ) as orderbook:
+            msg = {
+                'type': 'subscribe',
+                'product_ids': product_ids,
+                'signature': '5qne58tAXSW3OJlU/GoC+/mTLF1xgT8vucjJWFZzhsU=',
+                'timestamp': timestamp,
+                'key': 'a',
+                'passphrase': 'b',
+                }
+            assert orderbook._authenticated
+            mock_connect.return_value.aenter.send_json.assert_called_with(msg)

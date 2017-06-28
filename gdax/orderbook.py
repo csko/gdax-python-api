@@ -131,7 +131,7 @@ class OrderBook(object):
             message['key'] = self.api_key
             message['passphrase'] = self.passphrase
 
-        return await self._send(type='subscribe', product_ids=self.product_ids)
+        return await self._send(**message)
 
     async def handle_message(self):
         try:
