@@ -192,8 +192,19 @@ class TestOrderbook(object):
     @patch('gdax.trader.Trader.get_product_order_book')
     async def test_heartbeat(self, mock_book, mock_connect):
         mock_connect.return_value.aenter.send_json = CoroutineMock()
+        mock_connect.return_value.aenter.receive_str = CoroutineMock()
 
         mock_book.return_value = {'bids': [], 'asks': [], 'sequence': 1}
+        message_expected = {
+          "type": "heartbeat",
+          "last_trade_id": 17393422,
+          "product_id": "ETH-USD",
+          "sequence": 2,
+          "time": "2017-06-25T11:23:14.838000Z"
+        }
+        mock_connect.return_value.aenter.receive_str.side_effect = [
+            json.dumps(message_expected),
+        ]
         product_ids = ['ETH-USD']
         async with gdax.orderbook.OrderBook(product_ids,
                                             use_heartbeat=True) as orderbook:
@@ -201,6 +212,9 @@ class TestOrderbook(object):
             heartbeat_msg = {'type': 'heartbeat', 'on': True}
             calls = [call(subscribe_msg), call(heartbeat_msg)]
             mock_connect.return_value.aenter.send_json.assert_has_calls(calls)
+
+            message = await orderbook.handle_message()
+            assert message == message_expected
 
     @patch('gdax.trader.Trader.get_product_order_book')
     async def test_authentication(self, mock_book, mock_connect, mocker):
@@ -243,7 +257,7 @@ class TestOrderbook(object):
               "time": "2017-06-25T11:23:14.775000Z"
             }
         mock_connect.return_value.aenter.receive_str.side_effect = [
-            json.dumps(message_expected)
+            json.dumps(message_expected),
         ]
         async with gdax.orderbook.OrderBook('BTC-USD') as orderbook:
             assert orderbook.product_ids == ['BTC-USD']
