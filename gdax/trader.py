@@ -349,7 +349,7 @@ class Trader(object):
         return await self._get("/users/self/trailing-volume")
 
 
-async def main():
+async def main():  # pragma: no cover
     trader = Trader(product_id='BTC-USD',
                     api_key=None,
                     api_secret=None,
@@ -363,7 +363,7 @@ async def main():
     logging.info(res)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     logging.getLogger().setLevel(logging.INFO)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())

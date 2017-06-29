@@ -304,6 +304,7 @@ class TestOrderbook(object):
         mock_connect.return_value.aenter.send_json = CoroutineMock()
         messages_expected = [
             {  # ignored
+              "type": "received",
               "product_id": product_id,
               "sequence": sequence - 1,
             },
@@ -454,3 +455,30 @@ class TestOrderbook(object):
             current_book['sequence'] += 1
             assert orderbook.get_current_book(product_id) != current_book
             # TODO
+
+    @patch('gdax.trader.Trader.get_product_order_book')
+    async def test_error(self, mock_book, mock_connect):
+        mock_connect.return_value.aenter.receive_str = CoroutineMock()
+        mock_connect.return_value.aenter.send_json = CoroutineMock()
+        mock_book.return_value = {'bids': [], 'asks': [], 'sequence': 1}
+        messages_expected = [
+          {
+            "type": "error",
+            "message": "test error",
+          },
+          {
+            "type": "unknownmsgtype",
+            'product_id': 'ETH-USD',
+            'sequence': 2,
+          },
+        ]
+        mock_connect.return_value.aenter.receive_str.side_effect = [
+            json.dumps(message_expected)
+            for message_expected in messages_expected
+        ]
+        async with gdax.orderbook.OrderBook() as orderbook:
+            with pytest.raises(gdax.orderbook.OrderBookError):
+                message = await orderbook.handle_message()
+
+            with pytest.raises(gdax.orderbook.OrderBookError):
+                message = await orderbook.handle_message()

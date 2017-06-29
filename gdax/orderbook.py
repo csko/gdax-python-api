@@ -20,6 +20,10 @@ import gdax.trader
 import gdax.utils
 
 
+class OrderBookError(Exception):
+    pass
+
+
 class OrderBook(object):
     def __init__(self, product_ids='ETH-USD', api_key=None, api_secret=None,
                  passphrase=None, use_heartbeat=False,
@@ -147,6 +151,11 @@ class OrderBook(object):
             await self._init()
             return
 
+        msg_type = message['type']
+
+        if msg_type == 'error':
+            raise OrderBookError(f'Error: {message["message"]}')
+
         product_id = message['product_id']
         assert self._sequences[product_id] is not None
         sequence = message['sequence']
@@ -163,7 +172,6 @@ class OrderBook(object):
             await self._init()
             return
 
-        msg_type = message['type']
         if msg_type == 'open':
             self.add(product_id, message)
         elif msg_type == 'done' and 'price' in message:
@@ -172,8 +180,6 @@ class OrderBook(object):
             self.match(product_id, message)
         elif msg_type == 'change':
             self.change(product_id, message)
-        elif msg_type == 'error':
-            raise Exception(f'Error: {message["message"]}')
         elif msg_type == 'heartbeat':
             pass
         elif msg_type == 'received':
@@ -181,7 +187,7 @@ class OrderBook(object):
         elif msg_type == 'done':
             pass
         else:
-            raise Exception(f'unknown message type {msg_type}')
+            raise OrderBookError(f'unknown message type {msg_type}')
 
         self._sequences[product_id] = sequence
         return message
@@ -344,7 +350,7 @@ class OrderBook(object):
         return sum([order['size'] for order in orders])
 
 
-async def run_orderbook():
+async def run_orderbook():  # pragma: no cover
     async with OrderBook(
         ['ETH-USD', 'BTC-USD'],
         api_key=None,
@@ -367,7 +373,7 @@ async def run_orderbook():
                          orderbook.get_min_ask_depth('ETH-USD'),
                          orderbook.get_max_bid_depth('ETH-USD'))
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     logging.getLogger().setLevel(logging.INFO)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run_orderbook())
