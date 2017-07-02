@@ -5,11 +5,10 @@ JSON client for interacting with api.gdax.com.
 """
 
 import copy
+from decimal import Decimal
 import json
 import logging
 import time
-import hmac
-import hashlib
 
 import asyncio
 import aiohttp
@@ -50,7 +49,34 @@ class Trader(object):
             'CB-ACCESS-PASSPHRASE': self.passphrase,
         }
 
-    async def _get(self, path, params=None, pagination=False):
+    def _convert_return_fields(self, fields, decimal_fields, convert_all):
+        if decimal_fields is None and not convert_all:
+            return fields
+        if isinstance(fields, list):
+            return [self._convert_return_fields(field, decimal_fields,
+                                                convert_all)
+                    for field in fields]
+        elif isinstance(fields, dict):
+            new_fields = {}
+            for k, v in fields.items():
+                if (decimal_fields is not None and k in decimal_fields) \
+                   or convert_all:
+                    if isinstance(v, list):
+                        new_fields[k] = self._convert_return_fields(
+                            v, decimal_fields, convert_all)
+                    else:
+                        new_fields[k] = Decimal(v)
+                else:
+                    new_fields[k] = v
+            return new_fields
+        else:
+            if convert_all and not isinstance(fields, int):
+                return Decimal(fields)
+            else:
+                return fields
+
+    async def _get(self, path, params=None, decimal_return_fields=None,
+                   convert_all=False, pagination=False):
         if params is None:
             params_copy = {}
         else:
@@ -81,9 +107,11 @@ class Trader(object):
                         if "cb-after" in resp_headers:
                             params_copy['after'] = resp_headers['cb-after']
                         else:
-                            return results
+                            return self._convert_return_fields(
+                                results, decimal_return_fields, convert_all)
                     else:
-                        return res
+                        return self._convert_return_fields(
+                            res, decimal_return_fields, convert_all)
 
     async def _post(self, path, data=None):
         json_data = json.dumps(data)
@@ -109,21 +137,27 @@ class Trader(object):
                 return await response.json()
 
     async def get_products(self):
-        return await self._get('/products')
+        return await self._get(
+            '/products',
+            decimal_return_fields={'base_min_size', 'base_max_size',
+                                   'quote_increment'})
 
     async def get_product_ticker(self, product_id=None):
         return await self._get(
-            '/products/{}/ticker'.format(product_id or self.product_id))
+            '/products/{}/ticker'.format(product_id or self.product_id),
+            decimal_return_fields={'price', 'size', 'bid', 'ask', 'volume'})
 
     async def get_product_trades(self, product_id=None):
         return await self._get(
-            '/products/{}/trades'.format(product_id or self.product_id))
+            '/products/{}/trades'.format(product_id or self.product_id),
+            decimal_return_fields={'price', 'size'})
 
     async def get_product_order_book(self, product_id=None, level=1):
         params = {'level': level}
         return await self._get(
             '/products/{}/book'.format(product_id or self.product_id),
-            params=params)
+            params=params, decimal_return_fields={'bids', 'asks'},
+            convert_all=True)
 
     async def get_product_historic_rates(self, product_id=None, start='',
                                          end='', granularity=''):
@@ -131,20 +165,29 @@ class Trader(object):
         payload["start"] = start
         payload["end"] = end
         payload["granularity"] = granularity
-        return await self._get(
+        res = await self._get(
             '/products/{}/candles'.format(product_id or self.product_id),
             params=payload)
+        # NOTE: there's a bug where the API returns floats instead of strings
+        # here
+        for row in res:
+            for i, col in enumerate(row[1:]):
+                row[i + 1] = Decimal(str(col))
+        return res
 
     async def get_product_24hr_stats(self, product_id=None):
         return await self._get(
-            '/products/{}/stats'.format(product_id or self.product_id))
+            '/products/{}/stats'.format(product_id or self.product_id),
+            convert_all=True)
 
     async def get_currencies(self):
-        return await self._get('/currencies')
+        return await self._get('/currencies',
+                               decimal_return_fields={'min_size'})
 
     async def get_time(self):
         return await self._get('/time')
 
+    # TODO: convert return values
     # authenticated API
     async def get_account(self, account_id=''):
         assert self.authenticated
@@ -358,6 +401,7 @@ async def main():  # pragma: no cover
         trader.get_products(),
         trader.get_product_ticker(),
         trader.get_time(),
+        trader.get_product_historic_rates(),
         # trader.buy(type='limit', size='0.01', price='2500.12'),
     )
     logging.info(res)

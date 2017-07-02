@@ -2,7 +2,7 @@ import base64
 import asyncio
 from decimal import Decimal
 
-from asynctest import patch, CoroutineMock, call
+from asynctest import patch, CoroutineMock
 from tests.helpers import AsyncContextManagerMock, \
     AsyncContextManagerMockPagination
 import pytest
@@ -115,11 +115,94 @@ class TestPublicClient:
               "display_name": "ETH/USD"
             }
         ]
+        expected_products = [
+            {
+              "id": "LTC-EUR",
+              "base_currency": "LTC",
+              "quote_currency": "EUR",
+              "base_min_size": Decimal("0.01"),
+              "base_max_size": Decimal("1000000"),
+              "quote_increment": Decimal("0.01"),
+              "display_name": "LTC/EUR"
+            },
+            {
+              "id": "LTC-BTC",
+              "base_currency": "LTC",
+              "quote_currency": "BTC",
+              "base_min_size": Decimal("0.01"),
+              "base_max_size": Decimal("1000000"),
+              "quote_increment": Decimal("0.00001"),
+              "display_name": "LTC/BTC"
+            },
+            {
+              "id": "BTC-GBP",
+              "base_currency": "BTC",
+              "quote_currency": "GBP",
+              "base_min_size": Decimal("0.01"),
+              "base_max_size": Decimal("250"),
+              "quote_increment": Decimal("0.01"),
+              "display_name": "BTC/GBP"
+            },
+            {
+              "id": "BTC-EUR",
+              "base_currency": "BTC",
+              "quote_currency": "EUR",
+              "base_min_size": Decimal("0.01"),
+              "base_max_size": Decimal("250"),
+              "quote_increment": Decimal("0.01"),
+              "display_name": "BTC/EUR"
+            },
+            {
+              "id": "ETH-EUR",
+              "base_currency": "ETH",
+              "quote_currency": "EUR",
+              "base_min_size": Decimal("0.01"),
+              "base_max_size": Decimal("5000"),
+              "quote_increment": Decimal("0.01"),
+              "display_name": "ETH/EUR"
+            },
+            {
+              "id": "ETH-BTC",
+              "base_currency": "ETH",
+              "quote_currency": "BTC",
+              "base_min_size": Decimal("0.01"),
+              "base_max_size": Decimal("5000"),
+              "quote_increment": Decimal("0.00001"),
+              "display_name": "ETH/BTC"
+            },
+            {
+              "id": "LTC-USD",
+              "base_currency": "LTC",
+              "quote_currency": "USD",
+              "base_min_size": Decimal("0.01"),
+              "base_max_size": Decimal("1000000"),
+              "quote_increment": Decimal("0.01"),
+              "display_name": "LTC/USD"
+            },
+            {
+              "id": "BTC-USD",
+              "base_currency": "BTC",
+              "quote_currency": "USD",
+              "base_min_size": Decimal("0.01"),
+              "base_max_size": Decimal("250"),
+              "quote_increment": Decimal("0.01"),
+              "display_name": "BTC/USD"
+            },
+            {
+              "id": "ETH-USD",
+              "base_currency": "ETH",
+              "quote_currency": "USD",
+              "base_min_size": Decimal("0.01"),
+              "base_max_size": Decimal("5000"),
+              "quote_increment": Decimal("0.01"),
+              "display_name": "ETH/USD"
+            }
+        ]
         mock_get.return_value.aenter.json = CoroutineMock(
             return_value=products)
         self.init()
         r = await self.client.get_products()
-        assert r == products
+        assert r == expected_products
 
     async def test_get_product_ticker(self, mock_get):
         ticker = {
@@ -131,10 +214,19 @@ class TestPublicClient:
             "volume": "13990.13083225",
             "time": "2017-06-26T06:29:06.993000Z"
         }
+        expected_ticker = {
+            "trade_id": 17429442,
+            "price": Decimal("2483.64000000"),
+            "size": Decimal("0.80809483"),
+            "bid": Decimal("2481.18"),
+            "ask": Decimal("2483.61"),
+            "volume": Decimal("13990.13083225"),
+            "time": "2017-06-26T06:29:06.993000Z"
+        }
         mock_get.return_value.aenter.json = CoroutineMock(return_value=ticker)
         self.init()
         r = await self.client.get_product_ticker('BTC-USD')
-        assert r == ticker
+        assert r == expected_ticker
 
     async def test_get_product_trades(self, mock_get):
         trades = [
@@ -153,11 +245,26 @@ class TestPublicClient:
             "side": "buy"
           }
         ]
+        expected_trades = [
+          {
+            "time": "2017-06-26T06:32:53.79Z",
+            "trade_id": 17429512,
+            "price": Decimal("2479.98000000"),
+            "size": Decimal("0.01997424"),
+            "side": "sell"
+          },
+          {
+            "time": "2017-06-26T06:32:24.113Z",
+            "trade_id": 17429508,
+            "price": Decimal("2479.97000000"),
+            "size": Decimal("0.54415961"),
+            "side": "buy"
+          }
+        ]
         mock_get.return_value.aenter.json = CoroutineMock(return_value=trades)
         self.init()
         r = await self.client.get_product_trades('BTC-USD')
-        assert type(r) is list
-        assert 'trade_id' in r[0]
+        assert r == expected_trades
 
     async def test_get_product_order_book(self, mock_get):
         orderbook = {
@@ -177,11 +284,30 @@ class TestPublicClient:
             ]
           ]
         }
+
+        expected_orderbook = {
+          "sequence": 3424558479,
+          "bids": [
+            [
+              Decimal("2483.8"),
+              Decimal("0.01"),
+              1
+            ]
+          ],
+          "asks": [
+            [
+              Decimal("2486.28"),
+              Decimal("0.01455"),
+              1
+            ]
+          ]
+        }
         mock_get.return_value.aenter.json = CoroutineMock(
             return_value=orderbook)
         self.init()
         r = await self.client.get_product_order_book('BTC-USD')
-        assert type(r) is dict
+        assert r == expected_orderbook
+
         orderbook = {
           "sequence": 3424562473,
           "bids": [
@@ -209,10 +335,37 @@ class TestPublicClient:
             ]
           ]
         }
+        expected_orderbook = {
+          "sequence": 3424562473,
+          "bids": [
+            [
+              Decimal("2483.99"),
+              Decimal("0.01"),
+              1
+            ],
+            [
+              Decimal("2483.98"),
+              Decimal("0.9798"),
+              5
+            ]
+          ],
+          "asks": [
+            [
+              Decimal("2486.48"),
+              Decimal("1.65567931"),
+              1
+            ],
+            [
+              Decimal("2487.72"),
+              Decimal("0.03"),
+              3
+            ]
+          ]
+        }
         mock_get.return_value.aenter.json = CoroutineMock(
             return_value=orderbook)
         r = await self.client.get_product_order_book('BTC-USD', level=2)
-        assert r == orderbook
+        assert r == expected_orderbook
 
     async def test_get_product_historic_rates(self, mock_get):
         rates = [
@@ -233,10 +386,28 @@ class TestPublicClient:
                 6.937264829999997
               ],
             ]
+        expected_rates = [
+              [
+                1498459140,
+                Decimal('2488.79'),
+                Decimal('2489.96'),
+                Decimal('2489.47'),
+                Decimal('2489.96'),
+                Decimal('9.332934549999997')
+              ],
+              [
+                1498459080,
+                Decimal('2486.24'),
+                Decimal('2489.97'),
+                Decimal('2486.24'),
+                Decimal('2489.96'),
+                Decimal('6.937264829999997')
+              ],
+            ]
         mock_get.return_value.aenter.json = CoroutineMock(return_value=rates)
         self.init()
         r = await self.client.get_product_historic_rates('BTC-USD')
-        assert r == rates
+        assert r == expected_rates
 
     async def test_get_product_24hr_stats(self, mock_get):
         stats = {
@@ -247,10 +418,18 @@ class TestPublicClient:
           "last": "2489.89000000",
           "volume_30day": "568418.24079392"
         }
+        expected_stats = {
+          "open": Decimal("2586.26000000"),
+          "high": Decimal("2625.00000000"),
+          "low": Decimal("2430.05000000"),
+          "volume": Decimal("14063.90737841"),
+          "last": Decimal("2489.89000000"),
+          "volume_30day": Decimal("568418.24079392")
+        }
         mock_get.return_value.aenter.json = CoroutineMock(return_value=stats)
         self.init()
         r = await self.client.get_product_24hr_stats('BTC-USD')
-        assert r == stats
+        assert r == expected_stats
 
     async def test_get_currencies(self, mock_get):
         currencies = [
@@ -285,11 +464,43 @@ class TestPublicClient:
             "min_size": "0.00000001"
           }
         ]
+        expected_currencies = [
+          {
+            "id": "BTC",
+            "name": "Bitcoin",
+            "min_size": Decimal("0.00000001")
+          },
+          {
+            "id": "EUR",
+            "name": "Euro",
+            "min_size": Decimal("0.01000000")
+          },
+          {
+            "id": "LTC",
+            "name": "Litecoin",
+            "min_size": Decimal("0.00000001")
+          },
+          {
+            "id": "GBP",
+            "name": "British Pound",
+            "min_size": Decimal("0.01000000")
+          },
+          {
+            "id": "USD",
+            "name": "United States Dollar",
+            "min_size": Decimal("0.01000000")
+          },
+          {
+            "id": "ETH",
+            "name": "Ether",
+            "min_size": Decimal("0.00000001")
+          }
+        ]
         mock_get.return_value.aenter.json = CoroutineMock(
             return_value=currencies)
         self.init()
         r = await self.client.get_currencies()
-        assert r == currencies
+        assert r == expected_currencies
 
     async def test_get_time(self, mock_get):
         r_time = {'iso': '2017-06-26T06:47:55.168Z', 'epoch': 1498459675.168}
