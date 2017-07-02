@@ -85,7 +85,7 @@ Install from PyPI:
 
     pip install gdax-python-api
 
-You can [download the latest version from Github](https://github.com/csko/gdax-python-api/archive/master.zip) and install it manually:
+You can [download the latest release from Github](https://github.com/csko/gdax-python-api/archive/master.zip) and install it manually:
 
     python setup.py install
 
@@ -95,7 +95,6 @@ You can [download the latest version from Github](https://github.com/csko/gdax-p
 * aiohttp
 * aiofiles
 * bintrees
-* websockets
 
 ## Acknowledgements
 Parts of this software are based on [GDAX-Python](https://github.com/danpaquin/GDAX-Python) by Daniel Paquin. See also https://github.com/danpaquin/GDAX-Python/blob/master/contributors.txt.
