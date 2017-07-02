@@ -4,6 +4,7 @@ import base64
 from decimal import Decimal
 
 import asyncio
+import aiohttp
 import pytest
 from asynctest import MagicMock, patch, CoroutineMock, call
 
@@ -457,7 +458,7 @@ class TestOrderbook(object):
             # TODO
 
     @patch('gdax.trader.Trader.get_product_order_book')
-    async def test_error(self, mock_book, mock_connect):
+    async def test_error_message(self, mock_book, mock_connect):
         mock_connect.return_value.aenter.receive_str = CoroutineMock()
         mock_connect.return_value.aenter.send_json = CoroutineMock()
         mock_book.return_value = {'bids': [], 'asks': [], 'sequence': 1}
@@ -482,3 +483,101 @@ class TestOrderbook(object):
 
             with pytest.raises(gdax.orderbook.OrderBookError):
                 message = await orderbook.handle_message()
+
+    @patch('gdax.trader.Trader.get_product_order_book')
+    async def test_disconnect(self, mock_book, mock_connect):
+        mock_connect.return_value.aenter.receive_str = CoroutineMock()
+        mock_connect.return_value.aenter.send_json = CoroutineMock()
+        mock_book.return_value = {'bids': [], 'asks': [], 'sequence': 1}
+
+        messages_expected = [
+            json.dumps({
+              "type": "done",
+              "side": "sell",
+              "order_id": "4eef1226-4b38-422c-a5b1-56def7107f9a",
+              "reason": "canceled",
+              "product_id": "ETH-USD",
+              "price": "2601.76000000",
+              "remaining_size": "3.09000000",
+              "sequence": 2,
+              "time": "2017-06-25T11:23:14.775000Z"
+            }),
+            aiohttp.ServerDisconnectedError('error'),
+            json.dumps({
+              "type": "done",
+              "side": "sell",
+              "order_id": "4eef1226-4b38-422c-a5b1-56def7107f9a",
+              "reason": "canceled",
+              "product_id": "ETH-USD",
+              "price": "2601.76000000",
+              "remaining_size": "3.09000000",
+              "sequence": 2,
+              "time": "2017-06-25T11:23:14.775000Z"
+            })
+        ]
+        mock_connect.return_value.aenter.receive_str.side_effect = \
+            messages_expected
+        async with gdax.orderbook.OrderBook() as orderbook:
+            message = await orderbook.handle_message()
+            assert message == json.loads(messages_expected[0])
+
+            message = await orderbook.handle_message()
+            assert message is None
+
+            message = await orderbook.handle_message()
+            assert message == json.loads(messages_expected[2])
+
+    @patch('gdax.trader.Trader.get_product_order_book')
+    async def test_out_of_order(self, mock_book, mock_connect):
+        mock_connect.return_value.aenter.receive_str = CoroutineMock()
+        mock_connect.return_value.aenter.send_json = CoroutineMock()
+        mock_book.return_value = {'bids': [], 'asks': [], 'sequence': 1}
+
+        messages_expected = [
+            {
+              "type": "done",
+              "side": "sell",
+              "order_id": "4eef1226-4b38-422c-a5b1-56def7107f9a",
+              "reason": "canceled",
+              "product_id": "ETH-USD",
+              "price": "2601.76000000",
+              "remaining_size": "3.09000000",
+              "sequence": 2,
+              "time": "2017-06-25T11:23:14.775000Z"
+            },
+            {
+              "type": "done",
+              "side": "sell",
+              "order_id": "4eef1226-4b38-422c-a5b1-56def7107f9a",
+              "reason": "canceled",
+              "product_id": "ETH-USD",
+              "price": "2601.76000000",
+              "remaining_size": "3.09000000",
+              "sequence": 4,
+              "time": "2017-06-25T11:23:14.775000Z"
+            },
+            {
+              "type": "done",
+              "side": "sell",
+              "order_id": "4eef1226-4b38-422c-a5b1-56def7107f9a",
+              "reason": "canceled",
+              "product_id": "ETH-USD",
+              "price": "2601.76000000",
+              "remaining_size": "3.09000000",
+              "sequence": 2,
+              "time": "2017-06-25T11:23:14.775000Z"
+            },
+        ]
+        mock_connect.return_value.aenter.receive_str.side_effect = [
+            json.dumps(message_expected)
+            for message_expected in messages_expected
+        ]
+        async with gdax.orderbook.OrderBook() as orderbook:
+            message = await orderbook.handle_message()
+            assert message == messages_expected[0]
+
+            message = await orderbook.handle_message()
+            assert message is None
+
+            message = await orderbook.handle_message()
+            assert message == messages_expected[2]

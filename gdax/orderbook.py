@@ -14,7 +14,6 @@ import time
 from bintrees import FastRBTree
 import aiofiles
 import aiohttp
-# import websockets
 
 import gdax.trader
 import gdax.utils
@@ -106,7 +105,7 @@ class OrderBook(object):
     async def _open_log_file(self):
         if self.trade_log_file_path is not None:
             self._trade_file = await aiofiles.open(self.trade_log_file_path,
-                                                   mode='w').__aenter__()
+                                                   mode='a').__aenter__()
 
     async def _close_log_file(self):
         if self._trade_file is not None:
@@ -147,8 +146,8 @@ class OrderBook(object):
         except aiohttp.ServerDisconnectedError as exc:
             logging.error(
                 f'Error: Exception: f{exc}. Re-initializing websocket.')
-            await self._ws_session.__aexit__(None, None, None)
-            await self._init()
+            await self.__aexit__(None, None, None)
+            await self.__aenter__()
             return
 
         msg_type = message['type']
@@ -168,8 +167,8 @@ class OrderBook(object):
             logging.error(
                 'Error: messages missing ({} - {}). Re-initializing websocket.'
                 .format(sequence, self._sequences[product_id]))
-            await self._ws_session.__aexit__(None, None, None)
-            await self._init()
+            await self.__aexit__(None, None, None)
+            await self.__aenter__()
             return
 
         if msg_type == 'open':
