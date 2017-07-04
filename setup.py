@@ -13,8 +13,7 @@ setup(
       install_requires=[
         'aiohttp==2.2.0',
         'aiofiles==0.3.1',
-        'async-timeout==1.2.1',
-        'requests==2.18.1',
+        'async_timeout==1.2.1',
         'bintrees==2.0.7',
       ],
       packages=find_packages(),
