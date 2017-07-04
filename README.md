@@ -94,7 +94,9 @@ You can [download the latest release from Github](https://github.com/csko/gdax-p
 * Python 3.6 (async/await, f-strings)
 * aiohttp
 * aiofiles
+* async_timeout
 * bintrees
+
 
 ## Acknowledgements
 Parts of this software are based on [GDAX-Python](https://github.com/danpaquin/GDAX-Python) by Daniel Paquin. See also https://github.com/danpaquin/GDAX-Python/blob/master/contributors.txt.
