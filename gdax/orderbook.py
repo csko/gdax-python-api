@@ -278,15 +278,15 @@ class OrderBook(object):
 
         node = tree.get(price)
 
+        # TODO: check old_size
         if node is None or not any(o['id'] == order['order_id'] for o in node):
             return
 
         index = list(map(itemgetter('id'), node)).index(order['order_id'])
         if 'new_size' in order:
             node[index]['size'] = new_size
-        if 'new_funds' in order:
+        if 'new_funds' in order:  # pragma: no cover
             assert False, 'This should not happen.'
-        tree.insert(price, node)
 
     def get_current_book(self, product_id):
         result = {
