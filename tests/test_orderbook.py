@@ -1,3 +1,4 @@
+import copy
 import json
 import base64
 from decimal import Decimal
@@ -33,11 +34,16 @@ asks1 = [
     [Decimal("2620.18"), Decimal("0.02"), id2],
 ]
 sequence = 3419033239
-test_book = {
-    "sequence": sequence,
-    "bids": bids1,
-    "asks": asks1,
-}
+
+
+def _book():
+    return copy.deepcopy({
+        "sequence": sequence,
+        "bids": bids1,
+        "asks": asks1,
+    })
+
+
 bids1_internal = {
     Decimal("2525.00"): [{
         'price': Decimal('2525.00'),
@@ -133,7 +139,7 @@ class TestOrderbook(object):
     @patch('gdax.trader.Trader.get_product_order_book')
     async def test_basic_init(self, mock_book, mock_connect):
         mock_connect.return_value.aenter.send_json = CoroutineMock()
-        mock_book.return_value = test_book
+        mock_book.return_value = _book()
 
         product_id = 'ETH-USD'
         product_ids = [product_id]
@@ -295,7 +301,7 @@ class TestOrderbook(object):
     async def test_orderbook_advanced(self, mock_book, mock_connect):
         # TODO: split test by message type
         product_id = 'BTC-USD'
-        mock_book.return_value = test_book
+        mock_book.return_value = _book()
         mock_connect.return_value.aenter.receive_str = CoroutineMock()
         mock_connect.return_value.aenter.send_json = CoroutineMock()
         messages_expected = [
@@ -316,28 +322,6 @@ class TestOrderbook(object):
               "time": "2017-06-25T11:23:14.792000Z"
             },
             {
-              "type": "done",
-              "side": "sell",
-              "order_id": asks1[0][2],
-              "reason": "canceled",
-              "product_id": product_id,
-              "price": "2596.74",
-              "remaining_size": "0.00000000",
-              "sequence": sequence + 2,
-              "time": "2017-06-25T11:23:14.775000Z"
-            },
-            {
-              "type": "done",
-              "side": "sell",
-              "order_id": asks1[1][2],
-              "reason": "canceled",
-              "product_id": product_id,
-              # no price specified
-              "remaining_size": "0.20000000",
-              "sequence": sequence + 3,
-              "time": "2017-06-25T11:23:14.937000Z"
-            },
-            {
               "type": "match",
               "trade_id": 17545513,
               "maker_order_id": asks1[1][2],
@@ -346,7 +330,7 @@ class TestOrderbook(object):
               "size": "0.01",
               "price": "2596.77",
               "product_id": product_id,
-              "sequence": sequence + 4,
+              "sequence": sequence + 2,
               "time": "2017-06-29T01:45:36.865000Z"
             },
             {
@@ -358,7 +342,7 @@ class TestOrderbook(object):
               "size": "0.41152763",
               "price": "2595.62",
               "product_id": product_id,
-              "sequence": sequence + 5,
+              "sequence": sequence + 3,
               "time": "2017-06-29T01:45:36.865000Z"
             },
             {
@@ -368,7 +352,7 @@ class TestOrderbook(object):
               "order_id": "26c22ff5-01b1-4ca3-859c-6349d6eb06b4",
               "remaining_size": "0.10000000",
               "product_id": product_id,
-              "sequence": sequence + 6,
+              "sequence": sequence + 4,
               "time": "2017-06-25T11:23:14.792000Z"
             },
         ]
@@ -389,36 +373,25 @@ class TestOrderbook(object):
             current_book['sequence'] += 1
             assert orderbook.get_current_book(product_id) == current_book
 
-            # done
+            # match
             price = Decimal('2596.74')
             price2 = Decimal('2596.77')
-            assert orderbook.get_asks(product_id, price) == \
-                asks1_internal[price]
+            current_book = orderbook.get_current_book(product_id)
+            assert orderbook.get_min_ask_depth(product_id) == \
+                Decimal('0.2')
             assert orderbook.get_ask(product_id) == price
+            assert orderbook.get_asks(product_id, price2) == \
+                asks1_internal[price2]
 
             message = await orderbook.handle_message()
             assert message == messages_expected[2]
-            assert orderbook.get_asks(product_id, price) is None
-            assert orderbook.get_ask(product_id) == price2
-            current_book['sequence'] += 1
-            assert orderbook.get_current_book(product_id) != current_book
-
-            # done 2
-            message = await orderbook.handle_message()
-            assert message == messages_expected[3]
-            current_book['sequence'] += 1
-            assert orderbook.get_current_book(product_id) != current_book
-            # TODO
-
-            # match
-            current_book = orderbook.get_current_book(product_id)
             assert orderbook.get_min_ask_depth(product_id) == \
-                Decimal('0.07670504')
-            message = await orderbook.handle_message()
-            assert message == messages_expected[4]
-            assert orderbook.get_min_ask_depth(product_id) == \
-                Decimal('0.06670504')
-            assert orderbook.get_ask(product_id) == price2
+                Decimal('0.2')
+            assert orderbook.get_ask(product_id) == price
+            asks = copy.deepcopy(asks1_internal[price2])
+            asks[0]['size'] = Decimal('0.06670504')
+            assert orderbook.get_asks(product_id, price2) == \
+                asks
             current_book['sequence'] += 1
             assert orderbook.get_current_book(product_id) != current_book
 
@@ -432,7 +405,7 @@ class TestOrderbook(object):
                 bids1_internal[price4]
             assert orderbook.get_bid(product_id) == price4
             message = await orderbook.handle_message()
-            assert message == messages_expected[5]
+            assert message == messages_expected[3]
             bids1_internal[price3][0]['size'] = Decimal('1.0')
             assert orderbook.get_bids(product_id, price3) == \
                 bids1_internal[price3]
@@ -445,7 +418,7 @@ class TestOrderbook(object):
             # open
             current_book = orderbook.get_current_book(product_id)
             message = await orderbook.handle_message()
-            assert message == messages_expected[6]
+            assert message == messages_expected[4]
             current_book['sequence'] += 1
             assert orderbook.get_current_book(product_id) != current_book
             # TODO
@@ -608,7 +581,7 @@ class TestOrderbook(object):
             json.dumps(message_expected)
             for message_expected in messages_expected
         ]
-        mock_book.return_value = test_book
+        mock_book.return_value = _book()
         async with gdax.orderbook.OrderBook(product_id) as orderbook:
             # change1
             current_book = orderbook.get_current_book(product_id)
@@ -618,10 +591,10 @@ class TestOrderbook(object):
 
             message = await orderbook.handle_message()
             assert message == messages_expected[0]
-            bids = bids1_internal[price][:]
+            bids = copy.deepcopy(bids1_internal[price])
             bids[0]['size'] = Decimal('101')
             assert orderbook.get_bids(product_id, price) == \
-                bids1_internal[price]
+                bids
             current_book['sequence'] += 1
             assert orderbook.get_current_book(product_id) != current_book
 
@@ -633,9 +606,92 @@ class TestOrderbook(object):
 
             message = await orderbook.handle_message()
             assert message == messages_expected[1]
-            asks = asks1_internal[price2][:]
+            asks = copy.deepcopy(asks1_internal[price2])
             asks[0]['size'] = Decimal('0.1')
             assert orderbook.get_asks(product_id, price2) == \
-                asks1_internal[price2]
+                asks
             current_book['sequence'] += 1
             assert orderbook.get_current_book(product_id) != current_book
+
+    @patch('gdax.trader.Trader.get_product_order_book')
+    async def test_orderbook_done(self, mock_book, mock_connect):
+        product_id = 'BTC-USD'
+        mock_book.return_value = _book()
+        mock_connect.return_value.aenter.receive_str = CoroutineMock()
+        mock_connect.return_value.aenter.send_json = CoroutineMock()
+        messages_expected = [
+            {
+              "type": "done",
+              "side": "sell",
+              "order_id": asks1[0][2],
+              "reason": "canceled",
+              "product_id": product_id,
+              "price": "2596.74",
+              "remaining_size": "0.00000000",
+              "sequence": sequence + 1,
+              "time": "2017-06-25T11:23:14.775000Z"
+            },
+            {
+              "type": "done",
+              "side": "buy",
+              "order_id": bids1[4][2],
+              "reason": "canceled",
+              "product_id": product_id,
+              "price": "2595.70",
+              "remaining_size": "0.00000000",
+              "sequence": sequence + 2,
+              "time": "2017-06-25T11:23:16.937000Z"
+            },
+            {
+              "type": "done",
+              "side": "sell",
+              "order_id": asks1[1][2],
+              "reason": "canceled",
+              "product_id": product_id,
+              # no price specified
+              "remaining_size": "0.20000000",
+              "sequence": sequence + 3,
+              "time": "2017-06-25T11:23:15.937000Z"
+            },
+        ]
+        mock_connect.return_value.aenter.receive_str.side_effect = [
+            json.dumps(message_expected)
+            for message_expected in messages_expected
+        ]
+        async with gdax.orderbook.OrderBook(product_id) as orderbook:
+            # done
+            current_book = orderbook.get_current_book(product_id)
+            price = Decimal('2596.74')
+            price2 = Decimal('2596.77')
+            assert orderbook.get_asks(product_id, price) == \
+                asks1_internal[price]
+            assert orderbook.get_ask(product_id) == price
+
+            message = await orderbook.handle_message()
+            assert message == messages_expected[0]
+            assert orderbook.get_asks(product_id, price) is None
+            assert orderbook.get_ask(product_id) == price2
+            current_book['sequence'] += 1
+            assert orderbook.get_current_book(product_id) != current_book
+
+            # done2
+            current_book = orderbook.get_current_book(product_id)
+            price2 = Decimal('2595.70')
+            price3 = Decimal('2595.62')
+            assert orderbook.get_bids(product_id, price2) == \
+                bids1_internal[price2]
+            assert orderbook.get_bid(product_id) == price2
+
+            message = await orderbook.handle_message()
+            assert message == messages_expected[1]
+            assert orderbook.get_bids(product_id, price2) is None
+            assert orderbook.get_bid(product_id) == price3
+            current_book['sequence'] += 1
+            assert orderbook.get_current_book(product_id) != current_book
+
+            # done3, market order ignored
+            current_book = orderbook.get_current_book(product_id)
+            message = await orderbook.handle_message()
+            assert message == messages_expected[2]
+            current_book['sequence'] += 1
+            assert orderbook.get_current_book(product_id) == current_book
