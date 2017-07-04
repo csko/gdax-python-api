@@ -3,11 +3,11 @@ import asyncio
 from decimal import Decimal
 
 from asynctest import patch, CoroutineMock
-from tests.helpers import AsyncContextManagerMock, \
-    AsyncContextManagerMockPagination
 import pytest
 
 import gdax
+from tests.helpers import AsyncContextManagerMock, \
+    AsyncContextManagerMockPagination, generate_id
 
 
 @pytest.yield_fixture
@@ -365,6 +365,66 @@ class TestPublicClient:
         mock_get.return_value.aenter.json = CoroutineMock(
             return_value=orderbook)
         r = await self.client.get_product_order_book('BTC-USD', level=2)
+        assert r == expected_orderbook
+
+        id1, id2, id3, id4 = (generate_id() for _ in range(4))
+        orderbook = {
+          "sequence": 3424562473,
+          "bids": [
+            [
+              "2483.99",
+              "0.01",
+              id1
+            ],
+            [
+              "2483.98",
+              "0.9798",
+              id2
+            ]
+          ],
+          "asks": [
+            [
+              "2486.48",
+              "1.65567931",
+              id3
+            ],
+            [
+              "2487.72",
+              "0.03",
+              id4
+            ]
+          ]
+        }
+        expected_orderbook = {
+          "sequence": 3424562473,
+          "bids": [
+            [
+              Decimal("2483.99"),
+              Decimal("0.01"),
+              id1
+            ],
+            [
+              Decimal("2483.98"),
+              Decimal("0.9798"),
+              id2
+            ]
+          ],
+          "asks": [
+            [
+              Decimal("2486.48"),
+              Decimal("1.65567931"),
+              id3
+            ],
+            [
+              Decimal("2487.72"),
+              Decimal("0.03"),
+              id4
+            ]
+          ]
+        }
+        mock_get.return_value.aenter.json = CoroutineMock(
+            return_value=orderbook)
+        r = await self.client.get_product_order_book('BTC-USD', level=3)
         assert r == expected_orderbook
 
     async def test_get_product_historic_rates(self, mock_get):

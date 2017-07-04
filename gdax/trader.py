@@ -5,7 +5,7 @@ JSON client for interacting with api.gdax.com.
 """
 
 import copy
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 import json
 import logging
 import time
@@ -71,7 +71,10 @@ class Trader(object):
             return new_fields
         else:
             if convert_all and not isinstance(fields, int):
-                return Decimal(fields)
+                try:
+                    return Decimal(fields)
+                except InvalidOperation:
+                    return fields
             else:
                 return fields
 

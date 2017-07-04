@@ -1,5 +1,4 @@
 import json
-import uuid
 import base64
 from decimal import Decimal
 
@@ -10,11 +9,7 @@ from asynctest import patch, CoroutineMock, call
 import gdax
 import gdax.orderbook
 
-from tests.helpers import AsyncContextManagerMock
-
-
-def generate_id():
-    return str(uuid.uuid4())
+from tests.helpers import AsyncContextManagerMock, generate_id
 
 
 id1 = generate_id()
@@ -22,20 +17,20 @@ id2 = generate_id()
 
 
 bids1 = [
-    ["2525.00", "1.5", generate_id()],
-    ["2595.52", "100", id2],
-    ["2595.52", "2", id1],
-    ["2595.62", "1.41152763", id2],
-    ["2595.70", "1.5", generate_id()],
+    [Decimal("2525.00"), Decimal("1.5"), generate_id()],
+    [Decimal("2595.52"), Decimal("100"), id2],
+    [Decimal("2595.52"), Decimal("2"), id1],
+    [Decimal("2595.62"), Decimal("1.41152763"), id2],
+    [Decimal("2595.70"), Decimal("1.5"), generate_id()],
 ]
 asks1 = [
-    ["2596.74", "0.2", generate_id()],
-    ["2596.77", "0.07670504", generate_id()],
-    ["2615.1", "0.011", generate_id()],
-    ["2620.05", "0.02", id1],
-    ["2620.1", "100", generate_id()],
-    ["2620.18", "0.01", id1],
-    ["2620.18", "0.02", id2],
+    [Decimal("2596.74"), Decimal("0.2"), generate_id()],
+    [Decimal("2596.77"), Decimal("0.07670504"), generate_id()],
+    [Decimal("2615.1"), Decimal("0.011"), generate_id()],
+    [Decimal("2620.05"), Decimal("0.02"), id1],
+    [Decimal("2620.1"), Decimal("100"), generate_id()],
+    [Decimal("2620.18"), Decimal("0.01"), id1],
+    [Decimal("2620.18"), Decimal("0.02"), id2],
 ]
 sequence = 3419033239
 test_book = {
@@ -154,8 +149,8 @@ class TestOrderbook(object):
 
             assert orderbook.get_current_book(product_id) == {
                 "sequence": 3419033239,
-                "bids": [[Decimal(r[0]), Decimal(r[1]), r[2]] for r in bids1],
-                "asks": [[Decimal(r[0]), Decimal(r[1]), r[2]] for r in asks1],
+                "bids": bids1,
+                "asks": asks1,
             }
 
             assert orderbook.get_ask(product_id) == Decimal('2596.74')
@@ -300,6 +295,7 @@ class TestOrderbook(object):
     async def test_orderbook_advanced(self, mock_book, mock_connect):
         # TODO: split test by message type
         product_id = 'BTC-USD'
+        mock_book.return_value = test_book
         mock_connect.return_value.aenter.receive_str = CoroutineMock()
         mock_connect.return_value.aenter.send_json = CoroutineMock()
         messages_expected = [
@@ -333,7 +329,7 @@ class TestOrderbook(object):
             {
               "type": "done",
               "side": "sell",
-              "order_id": asks1[1][0],
+              "order_id": asks1[1][2],
               "reason": "canceled",
               "product_id": product_id,
               # no price specified
@@ -380,7 +376,6 @@ class TestOrderbook(object):
             json.dumps(message_expected)
             for message_expected in messages_expected
         ]
-        mock_book.return_value = test_book
         async with gdax.orderbook.OrderBook(product_id) as orderbook:
             # ignore because of sequence number
             current_book = orderbook.get_current_book(product_id)

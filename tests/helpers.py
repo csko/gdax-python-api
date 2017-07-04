@@ -1,3 +1,4 @@
+import uuid
 from asynctest import PropertyMock, MagicMock
 
 
@@ -18,3 +19,7 @@ class AsyncContextManagerMockPagination(MagicMock):
 
     # two pages
     headers = PropertyMock(side_effect=[{'cb-after': 123}, {}])
+
+
+def generate_id():
+    return str(uuid.uuid4())
