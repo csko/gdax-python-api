@@ -758,17 +758,87 @@ class TestAuthClient(object):
 
     @patch('aiohttp.ClientSession.post', new_callable=AsyncContextManagerMock)
     async def test_buy(self, mock_post):
-        mock_post.return_value.aenter.json = CoroutineMock(return_value={})
+        message = {
+          "id": "d0c5340b-6d6c-49d9-b567-48c4bfca13d2",
+          "price": "0.10000000",
+          "size": "0.01000000",
+          "product_id": "BTC-USD",
+          "side": "buy",
+          "stp": "dc",
+          "type": "limit",
+          "time_in_force": "GTC",
+          "post_only": False,
+          "created_at": "2016-12-08T20:02:28.53864Z",
+          "fill_fees": "0.0000000000000000",
+          "filled_size": "0.00000000",
+          "executed_value": "0.0000000000000000",
+          "status": "pending",
+          "settled": False
+        }
+        expected_message = {
+          "id": "d0c5340b-6d6c-49d9-b567-48c4bfca13d2",
+          "price": Decimal("0.10000000"),
+          "size": Decimal("0.01000000"),
+          "product_id": "BTC-USD",
+          "side": "buy",
+          "stp": "dc",
+          "type": "limit",
+          "time_in_force": "GTC",
+          "post_only": False,
+          "created_at": "2016-12-08T20:02:28.53864Z",
+          "fill_fees": Decimal("0.0000000000000000"),
+          "filled_size": Decimal("0.00000000"),
+          "executed_value": Decimal("0.0000000000000000"),
+          "status": "pending",
+          "settled": False
+        }
+        mock_post.return_value.aenter.json = CoroutineMock(
+            return_value=message)
         self.init()
         r = await self.client.buy(product_id='product_id')
-        assert type(r) is dict
+        assert r == expected_message
 
     @patch('aiohttp.ClientSession.post', new_callable=AsyncContextManagerMock)
     async def test_sell(self, mock_post):
-        mock_post.return_value.aenter.json = CoroutineMock(return_value={})
+        message = {
+          "id": "d0c5340b-6d6c-49d9-b567-48c4bfca13d2",
+          "price": "0.10000000",
+          "size": "0.01000000",
+          "product_id": "BTC-USD",
+          "side": "sell",
+          "stp": "dc",
+          "type": "limit",
+          "time_in_force": "GTC",
+          "post_only": False,
+          "created_at": "2016-12-08T20:02:28.53864Z",
+          "fill_fees": "0.0000000000000000",
+          "filled_size": "0.00000000",
+          "executed_value": "0.0000000000000000",
+          "status": "pending",
+          "settled": False
+        }
+        expected_message = {
+          "id": "d0c5340b-6d6c-49d9-b567-48c4bfca13d2",
+          "price": Decimal("0.10000000"),
+          "size": Decimal("0.01000000"),
+          "product_id": "BTC-USD",
+          "side": "sell",
+          "stp": "dc",
+          "type": "limit",
+          "time_in_force": "GTC",
+          "post_only": False,
+          "created_at": "2016-12-08T20:02:28.53864Z",
+          "fill_fees": Decimal("0.0000000000000000"),
+          "filled_size": Decimal("0.00000000"),
+          "executed_value": Decimal("0.0000000000000000"),
+          "status": "pending",
+          "settled": False
+        }
+        mock_post.return_value.aenter.json = CoroutineMock(
+            return_value=message)
         self.init()
         r = await self.client.sell(product_id='product_id')
-        assert type(r) is dict
+        assert r == expected_message
 
     @patch('aiohttp.ClientSession.delete',
            new_callable=AsyncContextManagerMock)
@@ -781,38 +851,256 @@ class TestAuthClient(object):
     @patch('aiohttp.ClientSession.delete',
            new_callable=AsyncContextManagerMock)
     async def test_cancel_all(self, mock_delete):
-        mock_delete.return_value.aenter.json = CoroutineMock(return_value={})
+        message = [
+            "144c6f8e-713f-4682-8435-5280fbe8b2b4",
+            "debe4907-95dc-442f-af3b-cec12f42ebda",
+            "cf7aceee-7b08-4227-a76c-3858144323ab",
+            "dfc5ae27-cadb-4c0c-beef-8994936fde8a",
+            "34fecfbf-de33-4273-b2c6-baf8e8948be4"
+        ]
+        mock_delete.return_value.aenter.json = CoroutineMock(
+            return_value=message)
         self.init()
         r = await self.client.cancel_all()
-        assert type(r) is dict
+        assert r == message
 
     @patch('aiohttp.ClientSession.get', new_callable=AsyncContextManagerMock)
     async def test_get_order(self, mock_get):
-        mock_get.return_value.aenter.json = CoroutineMock(return_value={})
+        message = {
+            "id": "68e6a28f-ae28-4788-8d4f-5ab4e5e5ae08",
+            "price": "250.0000000",
+            "size": "1.00000000",
+            "product_id": "BTC-USD",
+            "side": "buy",
+            "stp": "dc",
+            "funds": "9.9750623400000000",
+            "specified_funds": "10.0000000000000000",
+            "type": "limit",
+            "post_only": False,
+            "created_at": "2016-12-08T20:09:05.508883Z",
+            "done_at": "2016-12-08T20:09:05.527Z",
+            "done_reason": "filled",
+            "fill_fees": "0.0249376391550000",
+            "filled_size": "0.01291771",
+            "executed_value": "9.9750556620000000",
+            "status": "done",
+            "settled": False
+        }
+        expected_message = {
+            "id": "68e6a28f-ae28-4788-8d4f-5ab4e5e5ae08",
+            "price": Decimal("250.0000000"),
+            "size": Decimal("1.00000000"),
+            "product_id": "BTC-USD",
+            "side": "buy",
+            "stp": "dc",
+            "funds": Decimal("9.9750623400000000"),
+            "specified_funds": Decimal("10.0000000000000000"),
+            "type": "limit",
+            "post_only": False,
+            "created_at": "2016-12-08T20:09:05.508883Z",
+            "done_at": "2016-12-08T20:09:05.527Z",
+            "done_reason": "filled",
+            "fill_fees": Decimal("0.0249376391550000"),
+            "filled_size": Decimal("0.01291771"),
+            "executed_value": Decimal("9.9750556620000000"),
+            "status": "done",
+            "settled": False
+        }
+        mock_get.return_value.aenter.json = CoroutineMock(return_value=message)
         self.init()
         r = await self.client.get_order('order_id')
-        assert type(r) is dict
+        assert r == expected_message
 
     @patch('aiohttp.ClientSession.get', new_callable=AsyncContextManagerMock)
     async def test_get_orders(self, mock_get):
-        mock_get.return_value.aenter.json = CoroutineMock(return_value={})
+        message = [
+            {
+                "id": "d0c5340b-6d6c-49d9-b567-48c4bfca13d2",
+                "price": "0.10000000",
+                "size": "0.01000000",
+                "product_id": "BTC-USD",
+                "side": "buy",
+                "stp": "dc",
+                "type": "limit",
+                "time_in_force": "GTC",
+                "post_only": False,
+                "created_at": "2016-12-08T20:02:28.53864Z",
+                "fill_fees": "0.0000000000000000",
+                "filled_size": "0.00000000",
+                "executed_value": "0.0000000000000000",
+                "status": "open",
+                "settled": False
+            },
+            {
+                "id": "8b99b139-58f2-4ab2-8e7a-c11c846e3022",
+                "price": "1.00000000",
+                "size": "1.00000000",
+                "product_id": "BTC-USD",
+                "side": "buy",
+                "stp": "dc",
+                "type": "limit",
+                "time_in_force": "GTC",
+                "post_only": False,
+                "created_at": "2016-12-08T20:01:19.038644Z",
+                "fill_fees": "0.0000000000000000",
+                "filled_size": "0.00000000",
+                "executed_value": "0.0000000000000000",
+                "status": "open",
+                "settled": False
+            }
+        ]
+        expected_message = [
+            {
+                "id": "d0c5340b-6d6c-49d9-b567-48c4bfca13d2",
+                "price": Decimal("0.10000000"),
+                "size": Decimal("0.01000000"),
+                "product_id": "BTC-USD",
+                "side": "buy",
+                "stp": "dc",
+                "type": "limit",
+                "time_in_force": "GTC",
+                "post_only": False,
+                "created_at": "2016-12-08T20:02:28.53864Z",
+                "fill_fees": Decimal("0.0000000000000000"),
+                "filled_size": Decimal("0.00000000"),
+                "executed_value": Decimal("0.0000000000000000"),
+                "status": "open",
+                "settled": False
+            },
+            {
+                "id": "8b99b139-58f2-4ab2-8e7a-c11c846e3022",
+                "price": Decimal("1.00000000"),
+                "size": Decimal("1.00000000"),
+                "product_id": "BTC-USD",
+                "side": "buy",
+                "stp": "dc",
+                "type": "limit",
+                "time_in_force": "GTC",
+                "post_only": False,
+                "created_at": "2016-12-08T20:01:19.038644Z",
+                "fill_fees": Decimal("0.0000000000000000"),
+                "filled_size": Decimal("0.00000000"),
+                "executed_value": Decimal("0.0000000000000000"),
+                "status": "open",
+                "settled": False
+            }
+        ]
+
+        mock_get.return_value.aenter.json = CoroutineMock(return_value=message)
         self.init()
         r = await self.client.get_orders()
-        assert type(r) is list
+        assert r == expected_message
 
     @patch('aiohttp.ClientSession.get', new_callable=AsyncContextManagerMock)
     async def test_get_fills(self, mock_get):
-        mock_get.return_value.aenter.json = CoroutineMock(return_value={})
+        message = [
+            {
+                "trade_id": 74,
+                "product_id": "BTC-USD",
+                "price": "10.00",
+                "size": "0.01",
+                "order_id": "d50ec984-77a8-460a-b958-66f114b0de9b",
+                "created_at": "2014-11-07T22:19:28.578544Z",
+                "liquidity": "T",
+                "fee": "0.00025",
+                "settled": True,
+                "side": "buy"
+            }
+        ]
+        expected_message = [
+            {
+                "trade_id": 74,
+                "product_id": "BTC-USD",
+                "price": Decimal("10.00"),
+                "size": Decimal("0.01"),
+                "order_id": "d50ec984-77a8-460a-b958-66f114b0de9b",
+                "created_at": "2014-11-07T22:19:28.578544Z",
+                "liquidity": "T",
+                "fee": Decimal("0.00025"),
+                "settled": True,
+                "side": "buy"
+            }
+        ]
+        mock_get.return_value.aenter.json = CoroutineMock(return_value=message)
         self.init()
         r = await self.client.get_fills()
-        assert type(r) is list
+        assert r == expected_message
 
     @patch('aiohttp.ClientSession.get', new_callable=AsyncContextManagerMock)
     async def test_get_fundings(self, mock_get):
-        mock_get.return_value.aenter.json = CoroutineMock(return_value={})
+        message = [
+          {
+            "id": "b93d26cd-7193-4c8d-bfcc-446b2fe18f71",
+            "order_id": "b93d26cd-7193-4c8d-bfcc-446b2fe18f71",
+            "profile_id": "d881e5a6-58eb-47cd-b8e2-8d9f2e3ec6f6",
+            "amount": "1057.6519956381537500",
+            "status": "settled",
+            "created_at": "2017-03-17T23:46:16.663397Z",
+            "currency": "USD",
+            "repaid_amount": "1057.6519956381537500",
+            "default_amount": "0",
+            "repaid_default": False
+          },
+          {
+            "id": "280c0a56-f2fa-4d3b-a199-92df76fff5cd",
+            "order_id": "280c0a56-f2fa-4d3b-a199-92df76fff5cd",
+            "profile_id": "d881e5a6-58eb-47cd-b8e2-8d9f2e3ec6f6",
+            "amount": "545.2400000000000000",
+            "status": "outstanding",
+            "created_at": "2017-03-18T00:34:34.270484Z",
+            "currency": "USD",
+            "repaid_amount": "532.7580047716682500"
+          },
+          {
+            "id": "d6ec039a-00eb-4bec-a3e1-f5c6a97c4afc",
+            "order_id": "d6ec039a-00eb-4bec-a3e1-f5c6a97c4afc",
+            "profile_id": "d881e5a6-58eb-47cd-b8e2-8d9f2e3ec6f6",
+            "amount": "9.9999999958500000",
+            "status": "outstanding",
+            "created_at": "2017-03-19T23:16:11.615181Z",
+            "currency": "USD",
+            "repaid_amount": "0"
+          }
+        ]
+        expected_message = [
+          {
+            "id": "b93d26cd-7193-4c8d-bfcc-446b2fe18f71",
+            "order_id": "b93d26cd-7193-4c8d-bfcc-446b2fe18f71",
+            "profile_id": "d881e5a6-58eb-47cd-b8e2-8d9f2e3ec6f6",
+            "amount": Decimal("1057.6519956381537500"),
+            "status": "settled",
+            "created_at": "2017-03-17T23:46:16.663397Z",
+            "currency": "USD",
+            "repaid_amount": Decimal("1057.6519956381537500"),
+            "default_amount": Decimal("0"),
+            "repaid_default": False
+          },
+          {
+            "id": "280c0a56-f2fa-4d3b-a199-92df76fff5cd",
+            "order_id": "280c0a56-f2fa-4d3b-a199-92df76fff5cd",
+            "profile_id": "d881e5a6-58eb-47cd-b8e2-8d9f2e3ec6f6",
+            "amount": Decimal("545.2400000000000000"),
+            "status": "outstanding",
+            "created_at": "2017-03-18T00:34:34.270484Z",
+            "currency": "USD",
+            "repaid_amount": Decimal("532.7580047716682500")
+          },
+          {
+            "id": "d6ec039a-00eb-4bec-a3e1-f5c6a97c4afc",
+            "order_id": "d6ec039a-00eb-4bec-a3e1-f5c6a97c4afc",
+            "profile_id": "d881e5a6-58eb-47cd-b8e2-8d9f2e3ec6f6",
+            "amount": Decimal("9.9999999958500000"),
+            "status": "outstanding",
+            "created_at": "2017-03-19T23:16:11.615181Z",
+            "currency": "USD",
+            "repaid_amount": Decimal("0")
+          }
+        ]
+
+        mock_get.return_value.aenter.json = CoroutineMock(return_value=message)
         self.init()
         r = await self.client.get_fundings('status')
-        assert type(r) is list
+        assert r == expected_message
 
     @patch('aiohttp.ClientSession.post', new_callable=AsyncContextManagerMock)
     async def test_repay_funding(self, mock_post):
@@ -823,11 +1111,42 @@ class TestAuthClient(object):
 
     @patch('aiohttp.ClientSession.post', new_callable=AsyncContextManagerMock)
     async def test_margin_transfer(self, mock_post):
-        mock_post.return_value.aenter.json = CoroutineMock(return_value={})
+        message = {
+          "created_at": "2017-01-25T19:06:23.415126Z",
+          "id": "80bc6b74-8b1f-4c60-a089-c61f9810d4ab",
+          "user_id": "521c20b3d4ab09621f000011",
+          "profile_id": "cda95996-ac59-45a3-a42e-30daeb061867",
+          "margin_profile_id": "45fa9e3b-00ba-4631-b907-8a98cbdf21be",
+          "type": "deposit",
+          "amount": "2",
+          "currency": "USD",
+          "account_id": "23035fc7-0707-4b59-b0d2-95d0c035f8f5",
+          "margin_account_id": "e1d9862c-a259-4e83-96cd-376352a9d24d",
+          "margin_product_id": "BTC-USD",
+          "status": "completed",
+          "nonce": 25
+        }
+        expected_message = {
+          "created_at": "2017-01-25T19:06:23.415126Z",
+          "id": "80bc6b74-8b1f-4c60-a089-c61f9810d4ab",
+          "user_id": "521c20b3d4ab09621f000011",
+          "profile_id": "cda95996-ac59-45a3-a42e-30daeb061867",
+          "margin_profile_id": "45fa9e3b-00ba-4631-b907-8a98cbdf21be",
+          "type": "deposit",
+          "amount": Decimal("2"),
+          "currency": "USD",
+          "account_id": "23035fc7-0707-4b59-b0d2-95d0c035f8f5",
+          "margin_account_id": "e1d9862c-a259-4e83-96cd-376352a9d24d",
+          "margin_product_id": "BTC-USD",
+          "status": "completed",
+          "nonce": 25
+        }
+        mock_post.return_value.aenter.json = CoroutineMock(
+            return_value=message)
         self.init()
         r = await self.client.margin_transfer('id', 'deposit',
-                                              'USD', Decimal('10'))
-        assert type(r) is dict
+                                              'USD', Decimal('2'))
+        assert r == expected_message
 
     @patch('aiohttp.ClientSession.get', new_callable=AsyncContextManagerMock)
     async def test_get_position(self, mock_get):

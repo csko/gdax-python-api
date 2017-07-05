@@ -108,28 +108,6 @@ asks1_internal = {
           'size': Decimal("0.011"),
           'id': asks1[2][2]}],
 }
-"""
-{"type":"heartbeat","last_trade_id":17393422,"product_id":"BTC-USD","sequence":3419023015,"time":"2017-06-25T11:23:14.838000Z"}
-{"type":"received","order_id":"c1ac921c-021f-446d-ad6f-06057a6c17f5","order_type":"limit","size":"0.01495400","price":"309.41000000","side":"buy","product_id":"ETH-USD","sequence":617133250,"time":"2017-06-25T11:23:14.864000Z"}
-{"type":"open","side":"buy","price":"309.41000000","order_id":"c1ac921c-021f-446d-ad6f-06057a6c17f5","remaining_size":"0.01495400","product_id":"ETH-USD","sequence":617133251,"time":"2017-06-25T11:23:14.864000Z"}
-{"type":"received","order_id":"cc8b3a22-e0f4-4c34-ba35-743fec10cd5c","order_type":"limit","size":"3.00000000","price":"309.77000000","side":"sell","client_oid":"efc766ce-255f-4aa3-a359-bf7f33a3a932","product_id":"ETH-USD","sequence":617133252,"time":"2017-06-25T11:23:14.892000Z"}
-{"type":"open","side":"sell","price":"309.77000000","order_id":"cc8b3a22-e0f4-4c34-ba35-743fec10cd5c","remaining_size":"3.00000000","product_id":"ETH-USD","sequence":617133253,"time":"2017-06-25T11:23:14.892000Z"}
-{"type":"done","side":"buy","order_id":"9fb21887-aaaf-453b-8ff4-d9f9752fc23d","reason":"canceled","product_id":"ETH-USD","price":"306.91000000","remaining_size":"5.38724000","sequence":617133254,"time":"2017-06-25T11:23:14.898000Z"}
-{"type":"done","side":"sell","order_id":"1bd5ad13-96d0-4042-94a5-dd55cbdf4a27","reason":"canceled","product_id":"BTC-USD","price":"2628.61000000","remaining_size":"4.97552900","sequence":3419023016,"time":"2017-06-25T11:23:14.903000Z"}
-{"type":"done","side":"buy","order_id":"85cca062-8e45-444e-84a3-be7e17a37c66","reason":"canceled","product_id":"ETH-USD","price":"309.26000000","remaining_size":"0.02000000","sequence":617133255,"time":"2017-06-25T11:23:14.909000Z"}
-{"type":"done","side":"sell","order_id":"15f65f64-d2ba-438b-8b52-1403580c92f3","reason":"canceled","product_id":"ETH-USD","price":"309.60000000","remaining_size":"0.02000000","sequence":617133256,"time":"2017-06-25T11:23:14.916000Z"}
-{"type":"received","order_id":"2ab7e66e-cf7d-4840-addd-44da0ce05e68","order_type":"limit","size":"0.02000000","price":"309.28000000","side":"buy","client_oid":"ae18a040-5998-11e7-928d-c512efcd97b9","product_id":"ETH-USD","sequence":617133257,"time":"2017-06-25T11:23:14.923000Z"}
-{"type":"open","side":"buy","price":"309.28000000","order_id":"2ab7e66e-cf7d-4840-addd-44da0ce05e68","remaining_size":"0.02000000","product_id":"ETH-USD","sequence":617133258,"time":"2017-06-25T11:23:14.923000Z"}
-{"type":"received","order_id":"b5a63222-2bc9-4340-9295-a50f3e76dd9f","order_type":"limit","size":"0.02000000","price":"309.60000000","side":"sell","client_oid":"ae187930-5998-11e7-928d-c512efcd97b9","product_id":"ETH-USD","sequence":617133259,"time":"2017-06-25T11:23:14.931000Z"}
-{"type":"open","side":"sell","price":"309.60000000","order_id":"b5a63222-2bc9-4340-9295-a50f3e76dd9f","remaining_size":"0.02000000","product_id":"ETH-USD","sequence":617133260,"time":"2017-06-25T11:23:14.931000Z"}
-{"type":"done","side":"buy","order_id":"28e82f49-407d-4d60-9b98-b914dfa289aa","reason":"canceled","product_id":"BTC-USD","price":"2593.24000000","remaining_size":"0.20000000","sequence":3419023017,"time":"2017-06-25T11:23:14.935000Z"}
-{"type":"done","side":"buy","order_id":"e928ecbb-d920-4753-aef4-4911036b42f3","reason":"canceled","product_id":"ETH-USD","price":"302.22000000","remaining_size":"14.64853000","sequence":617133261,"time":"2017-06-25T11:23:14.934000Z"}
-{"type":"done","side":"sell","order_id":"94b38e12-cc81-46b4-ad86-cbf435ce03a2","reason":"canceled","product_id":"BTC-USD","price":"2599.41000000","remaining_size":"0.20000000","sequence":3419023018,"time":"2017-06-25T11:23:14.937000Z"}
-{"type":"received","order_id":"fdda08ad-11bc-4693-bf9d-0071ba839cbf","order_type":"limit","size":"0.20000000","price":"2593.25000000","side":"buy","client_oid":"576496ab-d27e-4663-8351-8dd786aa57cf","product_id":"BTC-USD","sequence":3419023019,"time":"2017-06-25T11:23:14.942000Z"}
-{"type":"open","side":"buy","price":"2593.25000000","order_id":"fdda08ad-11bc-4693-bf9d-0071ba839cbf","remaining_size":"0.20000000","product_id":"BTC-USD","sequence":3419023020,"time":"2017-06-25T11:23:14.942000Z"}
-{"type":"received","order_id":"c72b9f87-263f-4207-a571-e5698cc63eeb","order_type":"limit","size":"0.20000000","price":"2599.40000000","side":"sell","client_oid":"e6d1f3d5-615e-4c2c-9edd-85e19b893c67","product_id":"BTC-USD","sequence":3419023021,"time":"2017-06-25T11:23:14.947000Z"}
-{"type":"open","side":"sell","price":"2599.40000000","order_id":"c72b9f87-263f-4207-a571-e5698cc63eeb","remaining_size":"0.20000000","product_id":"BTC-USD","sequence":3419023022,"time":"2017-06-25T11:23:14.947000Z"}
-"""
 
 
 @pytest.mark.asyncio
@@ -299,7 +277,6 @@ class TestOrderbook(object):
 
     @patch('gdax.trader.Trader.get_product_order_book')
     async def test_orderbook_advanced(self, mock_book, mock_connect):
-        # TODO: split test by message type
         product_id = 'BTC-USD'
         mock_book.return_value = _book()
         mock_connect.return_value.aenter.receive_str = CoroutineMock()

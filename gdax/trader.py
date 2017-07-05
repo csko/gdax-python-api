@@ -116,7 +116,8 @@ class Trader(object):
                         return self._convert_return_fields(
                             res, decimal_return_fields, convert_all)
 
-    async def _post(self, path, data=None):
+    async def _post(self, path, data=None, decimal_return_fields=None,
+                    convert_all=False):
         json_data = json.dumps(data)
         headers = self._auth_headers(path, method='POST', body=json_data)
         path_url = self.API_URL + path
@@ -126,9 +127,11 @@ class Trader(object):
                                          data=json_data) as response:
                 res = await response.json()
                 response.raise_for_status()
-                return res
+                return self._convert_return_fields(
+                    res, decimal_return_fields, convert_all)
 
-    async def _delete(self, path, data=None):
+    async def _delete(self, path, data=None, decimal_return_fields=None,
+                      convert_all=False):
         json_data = json.dumps(data)
         headers = self._auth_headers(path, method='DELETE', body=json_data)
         path_url = self.API_URL + path
@@ -219,9 +222,13 @@ class Trader(object):
             payload['size'] = str(size)
         if funds is not None:
             payload['funds'] = str(funds)
+
         payload.update(kwargs)
 
-        return await self._post('/orders', data=payload)
+        return await self._post(
+            '/orders', data=payload,
+            decimal_return_fields={'price', 'size', 'fill_fees', 'filled_size',
+                                   'executed_value'})
 
     async def sell(self, product_id=None, price=None, size=None, funds=None,
                    **kwargs):
@@ -239,7 +246,11 @@ class Trader(object):
 
         payload.update(kwargs)
 
-        return await self._post('/orders', data=payload)
+        return await self._post(
+            '/orders', data=payload,
+            decimal_return_fields={'price', 'size', 'fill_fees', 'filled_size',
+                                   'executed_value', 'funds',
+                                   'specified_funds'})
 
     async def cancel_order(self, order_id):
         assert self.authenticated
@@ -252,11 +263,19 @@ class Trader(object):
 
     async def get_order(self, order_id):
         assert self.authenticated
-        return await self._get(f'/orders/{order_id}')
+        return await self._get(
+            f'/orders/{order_id}',
+            decimal_return_fields={'price', 'size', 'fill_fees', 'filled_size',
+                                   'executed_value', 'funds',
+                                   'specified_funds'})
 
     async def get_orders(self):
         assert self.authenticated
-        return await self._get('/orders', pagination=True)
+        return await self._get(
+            '/orders', pagination=True,
+            decimal_return_fields={'price', 'size', 'fill_fees', 'filled_size',
+                                   'executed_value', 'funds',
+                                   'specified_funds'})
 
     async def get_fills(self, order_id='', product_id=''):
         assert self.authenticated
@@ -265,14 +284,19 @@ class Trader(object):
             params['order_id'] = order_id
         if product_id:
             params['product_id'] = product_id or self.product_id
-        return await self._get('/fills', params=params, pagination=True)
+        return await self._get(
+            '/fills', params=params, pagination=True,
+            decimal_return_fields={'price', 'size', 'fee'})
 
     async def get_fundings(self, status):
         assert self.authenticated
         params = {}
         if status:
             params['status'] = status
-        return await self._get('/funding', params=params, pagination=True)
+        return await self._get(
+            '/funding', params=params, pagination=True,
+            decimal_return_fields={'amount', 'repaid_amount',
+                                   'default_amount'})
 
     async def repay_funding(self, amount, currency):
         assert self.authenticated
@@ -291,7 +315,8 @@ class Trader(object):
             "currency": currency,  # example: USD
             "amount": str(amount),
         }
-        return await self._post('/profiles/margin-transfer', data=payload)
+        return await self._post('/profiles/margin-transfer', data=payload,
+                                decimal_return_fields={'amount'})
 
     async def get_position(self):
         assert self.authenticated
