@@ -59,8 +59,11 @@ class Trader(object):
         elif isinstance(fields, dict):
             new_fields = {}
             for k, v in fields.items():
-                if (decimal_fields is not None and k in decimal_fields) \
-                   or convert_all:
+                if isinstance(v, dict):
+                    new_fields[k] = self._convert_return_fields(
+                        v, decimal_fields, convert_all)
+                elif ((decimal_fields is not None and k in decimal_fields)
+                      or convert_all):
                     if isinstance(v, list):
                         new_fields[k] = self._convert_return_fields(
                             v, decimal_fields, convert_all)
@@ -193,7 +196,6 @@ class Trader(object):
     async def get_time(self):
         return await self._get('/time')
 
-    # TODO: convert return values
     # authenticated API
     async def get_account(self, account_id=''):
         assert self.authenticated
@@ -320,7 +322,13 @@ class Trader(object):
 
     async def get_position(self):
         assert self.authenticated
-        return await self._get('/position')
+        return await self._get(
+            '/position',
+            decimal_return_fields={'max_funding_value', 'funding_value',
+                                   'amount', 'balance', 'hold',
+                                   'funded_amount', 'default_amount', 'price',
+                                   'sell', 'size', 'funds', 'complement',
+                                   'max_size'})
 
     async def close_position(self, repay_only=False):
         assert self.authenticated
@@ -336,7 +344,8 @@ class Trader(object):
             "currency": currency,
             "payment_method_id": payment_method_id,
         }
-        return await self._post('/deposits/payment-method', data=payload)
+        return await self._post('/deposits/payment-method', data=payload,
+                                decimal_return_fields={'amount'})
 
     async def coinbase_deposit(self, amount, currency, coinbase_account_id):
         assert self.authenticated
@@ -345,7 +354,8 @@ class Trader(object):
             "currency": currency,
             "coinbase_account_id": coinbase_account_id,
         }
-        return await self._post('/deposits/coinbase-account', data=payload)
+        return await self._post('/deposits/coinbase-account', data=payload,
+                                decimal_return_fields={'amount'})
 
     async def withdraw(self, amount, currency, payment_method_id):
         assert self.authenticated
@@ -354,7 +364,8 @@ class Trader(object):
             "currency": currency,
             "payment_method_id": payment_method_id,
         }
-        return await self._post('/withdrawals/payment-method', data=payload)
+        return await self._post('/withdrawals/payment-method', data=payload,
+                                decimal_return_fields={'amount'})
 
     async def coinbase_withdraw(self, amount, currency, coinbase_account_id):
         assert self.authenticated
@@ -363,7 +374,8 @@ class Trader(object):
             "currency": currency,
             "coinbase_account_id": coinbase_account_id,
         }
-        return await self._post('/withdrawals/coinbase', data=payload)
+        return await self._post('/withdrawals/coinbase', data=payload,
+                                decimal_return_fields={'amount'})
 
     async def crypto_withdraw(self, amount, currency, crypto_address):
         assert self.authenticated
@@ -372,7 +384,8 @@ class Trader(object):
             "currency": currency,
             "crypto_address": crypto_address
         }
-        return await self._post('/withdrawals/crypto', data=payload)
+        return await self._post('/withdrawals/crypto', data=payload,
+                                decimal_return_fields={'amount'})
 
     async def get_payment_methods(self):
         assert self.authenticated
@@ -380,7 +393,8 @@ class Trader(object):
 
     async def get_coinbase_accounts(self):
         assert self.authenticated
-        return await self._get('/coinbase-accounts')
+        return await self._get('/coinbase-accounts',
+                               decimal_return_fields={'balance'})
 
     async def create_report(self, report_type, start_date, end_date,
                             product_id=None, account_id=None,
@@ -417,7 +431,9 @@ class Trader(object):
 
     async def get_trailing_volume(self):
         assert self.authenticated
-        return await self._get("/users/self/trailing-volume")
+        return await self._get('/users/self/trailing-volume',
+                               decimal_return_fields={'exchange_volume',
+                                                      'volume'})
 
 
 async def main():  # pragma: no cover
