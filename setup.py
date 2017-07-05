@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
       name='gdax-python-api',
-      version='0.1',
+      version='0.2',
       description='GDAX API client written in Python3 using async/await',
       url='https://github.com/csko/gdax-python-api',
       license='MIT License',
