@@ -9,62 +9,42 @@ from decimal import Decimal
 import json
 import logging
 from operator import itemgetter
-import time
 
 from bintrees import FastRBTree
-import aiofiles
 import aiohttp
 
 import gdax.trader
 import gdax.utils
+from gdax.websocket_feed_listener import WebSocketFeedListener
 
 
 class OrderBookError(Exception):
     pass
 
 
-class OrderBook(object):
+class OrderBook(WebSocketFeedListener):
     def __init__(self, product_ids='ETH-USD', api_key=None, api_secret=None,
                  passphrase=None, use_heartbeat=False,
                  trade_log_file_path=None):
-        if api_key is not None:
-            self._authenticated = True
-            self.api_key = api_key
-            self.api_secret = api_secret
-            self.passphrase = passphrase
-        else:
-            self._authenticated = False
+
+        super().__init__(product_ids=product_ids,
+                         api_key=api_key,
+                         api_secret=api_secret,
+                         passphrase=passphrase,
+                         use_heartbeat=use_heartbeat,
+                         trade_log_file_path=trade_log_file_path)
 
         if not isinstance(product_ids, list):
             product_ids = [product_ids]
-        self.product_ids = product_ids
-        self.use_heartbeat = use_heartbeat
-        self.trade_log_file_path = trade_log_file_path
-        self._trade_file = None
 
         self.traders = {product_id: gdax.trader.Trader(product_id=product_id)
                         for product_id in product_ids}
         self._asks = {product_id: FastRBTree() for product_id in product_ids}
         self._bids = {product_id: FastRBTree() for product_id in product_ids}
         self._sequences = {product_id: None for product_id in product_ids}
-        self._ws_session = None
-        self._ws_connect = None
-        self._ws = None
-
-    async def _init(self):
-        self._ws_session = aiohttp.ClientSession()
-        self._ws_connect = self._ws_session.ws_connect(
-            'wss://ws-feed.gdax.com')
-        self._ws = await self._ws_connect.__aenter__()
-
-        # subscribe
-        await self._subscribe()
-
-        if self.use_heartbeat:
-            await self._send(type="heartbeat", on=True)
 
     async def __aenter__(self):
-        await asyncio.gather(self._init(), self._open_log_file())
+        await super().__aenter__()
 
         # get order book snapshot
         books = await asyncio.gather(
@@ -95,51 +75,6 @@ class OrderBook(object):
             self._sequences[product_id] = book['sequence']
         return self
 
-    async def __aexit__(self, exc_type, exc, traceback):
-        res = await asyncio.gather(
-            self._ws_session.__aexit__(exc_type, exc, traceback),
-            self._close_log_file(),
-        )
-        return res[0]
-
-    async def _open_log_file(self):
-        if self.trade_log_file_path is not None:
-            self._trade_file = await aiofiles.open(self.trade_log_file_path,
-                                                   mode='a').__aenter__()
-
-    async def _close_log_file(self):
-        if self._trade_file is not None:
-            await self._trade_file.__aexit__(None, None, None)
-
-    async def _send(self, **kwargs):
-        await self._ws.send_json(kwargs)
-
-    async def _recv(self):
-        json_data = await self._ws.receive_str()
-        if self._trade_file:
-            await self._trade_file.write(f'W {json_data}\n')
-        return json.loads(json_data)
-
-    async def _subscribe(self):
-        message = {
-            'type': 'subscribe',
-            'product_ids': self.product_ids
-        }
-
-        if self._authenticated:
-            path = '/users/self'
-            method = 'GET'
-            body = ''
-            timestamp = str(time.time())
-
-            message['signature'] = gdax.utils.get_signature(
-                path, method, body, timestamp, self.api_secret)
-            message['timestamp'] = timestamp
-            message['key'] = self.api_key
-            message['passphrase'] = self.passphrase
-
-        return await self._send(**message)
-
     async def handle_message(self):
         try:
             message = await self._recv()
@@ -154,6 +89,9 @@ class OrderBook(object):
 
         if msg_type == 'error':
             raise OrderBookError(f'Error: {message["message"]}')
+
+        if msg_type == 'subscriptions':
+            return  # must filter out here because the subscriptions message does not have a product_id key
 
         product_id = message['product_id']
         assert self._sequences[product_id] is not None
