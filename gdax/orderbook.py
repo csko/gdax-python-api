@@ -10,7 +10,7 @@ import json
 import logging
 from operator import itemgetter
 
-from bintrees import FastRBTree
+from sortedcontainers import SortedDict
 import aiohttp
 
 import gdax.trader
@@ -39,8 +39,8 @@ class OrderBook(WebSocketFeedListener):
 
         self.traders = {product_id: gdax.trader.Trader(product_id=product_id)
                         for product_id in product_ids}
-        self._asks = {product_id: FastRBTree() for product_id in product_ids}
-        self._bids = {product_id: FastRBTree() for product_id in product_ids}
+        self._asks = {product_id: SortedDict() for product_id in product_ids}
+        self._bids = {product_id: SortedDict() for product_id in product_ids}
         self._sequences = {product_id: None for product_id in product_ids}
 
     async def __aenter__(self):
@@ -255,35 +255,35 @@ class OrderBook(WebSocketFeedListener):
         return result
 
     def get_ask(self, product_id):
-        return self._asks[product_id].min_key()
+        return self._asks[product_id].iloc[0]
 
     def get_asks(self, product_id, price):
         return self._asks[product_id].get(price)
 
     def remove_asks(self, product_id, price):
-        self._asks[product_id].remove(price)
+        del self._asks[product_id][price]
 
     def set_asks(self, product_id, price, asks):
-        self._asks[product_id].insert(price, asks)
+        self._asks[product_id].update({price: asks})
 
     def get_bid(self, product_id):
-        return self._bids[product_id].max_key()
+        return self._bids[product_id].iloc[-1]
 
     def get_bids(self, product_id, price):
         return self._bids[product_id].get(price)
 
     def remove_bids(self, product_id, price):
-        self._bids[product_id].remove(price)
+        del self._bids[product_id][price]
 
     def set_bids(self, product_id, price, bids):
-        self._bids[product_id].insert(price, bids)
+        self._bids[product_id].update({price: bids})
 
     def get_min_ask_depth(self, product_id):
-        _, orders = self._asks[product_id].min_item()
+        orders = self._asks[product_id].get(self._asks[product_id].iloc[0])
         return sum([order['size'] for order in orders])
 
     def get_max_bid_depth(self, product_id):
-        _, orders = self._bids[product_id].max_item()
+        orders = self._bids[product_id].get(self._bids[product_id].iloc[-1])
         return sum([order['size'] for order in orders])
 
 
