@@ -14,7 +14,7 @@ setup(
         'aiohttp==2.2.0',
         'aiofiles==0.3.1',
         'async_timeout==1.2.1',
-        'bintrees==2.0.7',
+        'sortedcontainers==1.5.9',
       ],
       packages=find_packages(),
       include_package_data=True,
