@@ -95,7 +95,7 @@ You can [download the latest release from Github](https://github.com/csko/gdax-p
 * aiohttp
 * aiofiles
 * async_timeout
-* bintrees
+* sortedcontainers
 
 
 ## Acknowledgements
