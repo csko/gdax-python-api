@@ -15,6 +15,7 @@ setup(
         'aiofiles==0.3.1',
         'async_timeout==1.2.1',
         'sortedcontainers==1.5.9',
+        'ujson==1.35',
       ],
       packages=find_packages(),
       include_package_data=True,

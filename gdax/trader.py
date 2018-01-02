@@ -6,7 +6,7 @@ JSON client for interacting with api.gdax.com.
 
 import copy
 from decimal import Decimal, InvalidOperation
-import json
+import ujson as json
 import logging
 import time
 

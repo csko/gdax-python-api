@@ -1,5 +1,5 @@
 import copy
-import json
+import ujson as json
 import base64
 from decimal import Decimal
 
