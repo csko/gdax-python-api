@@ -9,6 +9,7 @@ from asynctest import patch, CoroutineMock, call
 
 import gdax
 import gdax.orderbook
+import gdax.utils
 
 from tests.helpers import AsyncContextManagerMock, generate_id
 
@@ -258,9 +259,16 @@ class TestOrderbook(object):
             json.dumps(message_expected)
         ]
         product_id = 'ETH-USD'
-        book = {'bids': [], 'asks': [], 'sequence': 1}
+        book = {
+            'bids': [[Decimal("849.6"), Decimal("100"), id2]],
+            'asks': [[Decimal("849.61"), Decimal("0.02"), id1]],
+            'sequence': 1,
+        }
+
         mock_book.return_value = book
-        calls = [call(f'B {product_id} {json.dumps(book)}\n')]
+        calls = [call(f'B {product_id} '
+                      f'{json.dumps(book, cls=gdax.utils.DecimalEncoder)}\n')]
+
         with patch('aiofiles.open',
                    new_callable=AsyncContextManagerMock) as mock_open:
             mock_open.return_value.aenter.write = CoroutineMock()

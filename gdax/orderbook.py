@@ -54,7 +54,8 @@ class OrderBook(WebSocketFeedListener):
         if self._trade_file:
             await asyncio.gather(
                 *[self._trade_file.write(
-                    f'B {product_id} {json.dumps(book)}\n')
+                    f'B {product_id} '
+                    f'{json.dumps(book, cls=gdax.utils.DecimalEncoder)}\n')
                   for product_id, book in zip(self.product_ids, books)])
 
         for product_id, book in zip(self.product_ids, books):

@@ -1,8 +1,10 @@
 """Utils for message signing, etc."""
 
 import base64
+import decimal
 import hashlib
 import hmac
+import json
 
 
 def get_signature(path, method, body, timestamp, api_secret):
@@ -19,3 +21,10 @@ def get_signature(path, method, body, timestamp, api_secret):
     signature_b64 = base64.b64encode(signature.digest())
 
     return signature_b64.decode('ascii')
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return float(o)
+
