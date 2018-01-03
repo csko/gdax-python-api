@@ -6,7 +6,7 @@ See: https://docs.gdax.com/#websocket-feed.
 """
 
 import asyncio
-import json
+import ujson as json
 
 import time
 

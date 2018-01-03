@@ -96,6 +96,7 @@ You can [download the latest release from Github](https://github.com/csko/gdax-p
 * aiofiles
 * async_timeout
 * sortedcontainers
+* ujson
 
 
 ## Acknowledgements

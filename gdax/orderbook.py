@@ -6,7 +6,7 @@ See: https://docs.gdax.com/#websocket-feed.
 
 import asyncio
 from decimal import Decimal
-import json
+import ujson as json
 import logging
 from operator import itemgetter
 
