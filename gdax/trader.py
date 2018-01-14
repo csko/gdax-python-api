@@ -135,8 +135,12 @@ class Trader(object):
 
     async def _delete(self, path, data=None, decimal_return_fields=None,
                       convert_all=False):
-        json_data = json.dumps(data)
-        headers = self._auth_headers(path, method='DELETE', body=json_data)
+        if data:
+            json_data = json.dumps(data)
+            headers = self._auth_headers(path, method='DELETE', body=json_data)
+        else:
+            json_data = None
+            headers = self._auth_headers(path, method='DELETE')
         path_url = self.API_URL + path
         with async_timeout.timeout(self.timeout_sec):
             async with self.session.delete(path_url,
